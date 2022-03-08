@@ -9,6 +9,7 @@ DB=$DIR_P2/db.v4
 CMD=$DIR_P2/bin/vad
 
 for filewav in $DB/*/*wav; do
+#Para todos los ficheros donde estemos, se ejecuta el fichero .vad
 #    echo
     echo "**************** $filewav ****************"
     if [[ ! -f $filewav ]]; then 
