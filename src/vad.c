@@ -14,7 +14,7 @@ const float FRAME_TIME = 10.0F; /* in ms. */
  */
 
 const char *state_str[] = {
-  "UNDEF", "S", "V", "INIT"
+  "UNDEF", "S", "V", "INIT", "MBV", "MBS"
 };
 
 const char *state2str(VAD_STATE st) {
@@ -26,6 +26,7 @@ typedef struct {
   float zcr;
   float p;
   float am;
+  float time; //Cuanto dura la trama estudiada
 } Features;
 
 /* 
@@ -43,10 +44,10 @@ Features compute_features(const float *x, int N) {
    * For the moment, compute random value between 0 and 1 
    */
   Features feat;
-  //feat.zcr = feat.p = feat.am = (float) rand()/RAND_MAX;
   feat.zcr = compute_zcr(x,N,16000);
   feat.am = compute_am(x,N);
   feat.p = compute_power(x,N);
+  feat.time = compute_time();
   return feat;
 }
 
@@ -115,15 +116,17 @@ VAD_STATE vad(VAD_DATA *vad_data, float *x) {
       vad_data->state = ST_SILENCE;
     break;
 
+/*
   case ST_MB_SILENCE:
     if(f.zcr > vad_data->zcr1)
-      vad_data->state = ST_SILENCE;
+      -----
     break;
 
   case ST_MB_VOICE:
-    if(f.zcr < vad_data->zcr1)
-      vad_data->state = ST_VOICE;
+    if()
+      -----
     break;
+*/
 
   case ST_UNDEF:
     break;
