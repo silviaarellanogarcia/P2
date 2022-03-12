@@ -95,21 +95,34 @@ VAD_STATE vad(VAD_DATA *vad_data, float *x) {
 
   Features f = compute_features(x, vad_data->frame_length);
   vad_data->last_feature = f.p; /* save feature, in case you want to show */ //Guardamos aquí la potencia
+  
 
   switch (vad_data->state) { //*** Autómata ***
   case ST_INIT:
     vad_data->state = ST_SILENCE;
     vad_data->p1 = f.p + 10; //p1 será 10 dBs más que el nivel de potencia que tenemos.
+    vad_data->am1 = f.am; //*** NO SE SI ES ÚTIL, CREO QUE EL VALOR ES CERCANO A CERO. PARECE QUE NO HAGA NADA PERO ALGO MEJORA***
+    vad_data->zcr1 = f.zcr-1; //El nivel que se tomará como referencia es el del principio (silencio)
     break;
 
   case ST_SILENCE:
-    if (f.p > vad_data->p1) //EL
+    if (f.p > vad_data->p1) 
       vad_data->state = ST_VOICE;
     break;
 
   case ST_VOICE:
     if (f.p < vad_data->p1)
       vad_data->state = ST_SILENCE;
+    break;
+
+  case ST_MB_SILENCE:
+    if(f.zcr > vad_data->zcr1)
+      vad_data->state = ST_SILENCE;
+    break;
+
+  case ST_MB_VOICE:
+    if(f.zcr < vad_data->zcr1)
+      vad_data->state = ST_VOICE;
     break;
 
   case ST_UNDEF:
