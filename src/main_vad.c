@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
   float frame_duration;   /* in seconds */
   unsigned int t, last_t; /* in frames */
 
-  char	*input_wav, *output_vad, *output_wav, *str_state, *str_last_state;
+  char	*input_wav, *output_vad, *output_wav;
 
   DocoptArgs args = docopt(argc, argv, /* help */ 1, /* version */ "2.0");
 
