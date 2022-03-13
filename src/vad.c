@@ -14,7 +14,7 @@ const float FRAME_TIME = 10.0F; /* in ms. */
  */
 
 const char *state_str[] = {
-  "UNDEF", "S", "V", "INIT", "MBV", "MBS"
+  "UNDEF", "S", "V", "INIT" //, "MBV", "MBS"
 };
 
 const char *state2str(VAD_STATE st) {
@@ -25,7 +25,7 @@ const char *state2str(VAD_STATE st) {
 typedef struct {
   float zcr;
   float p;
-  float am;
+  //float am;
   float time; //Cuanto dura la trama estudiada
 } Features;
 
@@ -45,9 +45,9 @@ Features compute_features(const float *x, int N) {
    */
   Features feat;
   feat.zcr = compute_zcr(x,N,16000);
-  feat.am = compute_am(x,N);
+  //feat.am = compute_am(x,N);
   feat.p = compute_power(x,N);
-  feat.time = compute_time();
+  feat.time = 0;//compute_time();
   return feat;
 }
 
@@ -99,37 +99,37 @@ VAD_STATE vad(VAD_DATA *vad_data, float *x) {
   
 
   switch (vad_data->state) { //*** Autómata ***
-  case ST_INIT:
-    vad_data->state = ST_SILENCE;
-    vad_data->p1 = f.p + 10; //p1 será 10 dBs más que el nivel de potencia que tenemos.
-    vad_data->am1 = f.am; //*** NO SE SI ES ÚTIL, CREO QUE EL VALOR ES CERCANO A CERO. PARECE QUE NO HAGA NADA PERO ALGO MEJORA***
-    vad_data->zcr1 = f.zcr-1; //El nivel que se tomará como referencia es el del principio (silencio)
-    break;
-
-  case ST_SILENCE:
-    if (f.p > vad_data->p1) 
-      vad_data->state = ST_VOICE;
-    break;
-
-  case ST_VOICE:
-    if (f.p < vad_data->p1)
+    case ST_INIT:
       vad_data->state = ST_SILENCE;
+      vad_data->p1 = f.p + 7; //p1 será 5 dBs más que el nivel de potencia que tenemos.
+      //vad_data->am1 = f.am; //*** NO SE SI ES ÚTIL, CREO QUE EL VALOR ES CERCANO A CERO. PARECE QUE NO HAGA NADA PERO ALGO MEJORA***
+      vad_data->zcr1 = f.zcr + 2; //El nivel que se tomará como referencia es el del principio (silencio)
     break;
 
-/*
-  case ST_MB_SILENCE:
-    if(f.zcr > vad_data->zcr1)
-      -----
-    break;
+    case ST_SILENCE:
+      if (f.p > vad_data->p1)
+        vad_data->state = ST_VOICE;
+      break;
 
-  case ST_MB_VOICE:
-    if()
-      -----
-    break;
-*/
+    case ST_VOICE:
+      if (f.p < vad_data->p1 && f.zcr < vad_data->zcr1)
+        vad_data->state = ST_SILENCE;
+      break;
 
-  case ST_UNDEF:
-    break;
+  /*
+    case ST_MB_SILENCE:
+      if(f.zcr > vad_data->zcr1)
+        -----
+      break;
+
+    case ST_MB_VOICE:
+      if()
+        -----
+      break;
+  */
+
+    case ST_UNDEF:
+      break;
   }
 
   if (vad_data->state == ST_SILENCE ||

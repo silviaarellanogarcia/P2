@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
   float frame_duration;   /* in seconds */
   unsigned int t, last_t; /* in frames */
 
-  char	*input_wav, *output_vad, *output_wav;
+  char	*input_wav, *output_vad, *output_wav, *str_state, *str_last_state;
 
   DocoptArgs args = docopt(argc, argv, /* help */ 1, /* version */ "2.0");
 
@@ -87,10 +87,15 @@ int main(int argc, char *argv[]) {
     /* TODO: print only SILENCE and VOICE labels */
     /* As it is, it prints UNDEF segments but is should be merge to the proper value */
     if (state != last_state) {
-      if (t != last_t)
-        fprintf(vadfile, "%.5f\t%.5f\t%s\n", last_t * frame_duration, t * frame_duration, state2str(last_state));
+      if (t != last_t) {
+        if (t > last_t + 12) {
+          fprintf(vadfile, "%.5f\t%.5f\t%s\n", last_t * frame_duration, t * frame_duration, state2str(last_state));
+          last_t = t;
+          //last_state = state;
+        }  
+      }
       last_state = state;
-      last_t = t;
+      //last_t = t;
     }
 
     if (sndfile_out != 0) {
