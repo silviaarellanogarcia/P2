@@ -82,7 +82,7 @@ unsigned int vad_frame_size(VAD_DATA *vad_data) {
  * using a Finite State Automata
  */
 
-VAD_STATE vad(VAD_DATA *vad_data, float *x) {
+VAD_STATE vad(VAD_DATA *vad_data, float *x, float alpha_pwr, float alpha_zcr) {
   /* Se llama solo una vez por trama a esta función
   x es la señal.
   f.p = feature de potencia
@@ -101,9 +101,9 @@ VAD_STATE vad(VAD_DATA *vad_data, float *x) {
   switch (vad_data->state) { //*** Autómata ***
     case ST_INIT:
       vad_data->state = ST_SILENCE;
-      vad_data->p1 = f.p + 7; //p1 será 5 dBs más que el nivel de potencia que tenemos.
+      vad_data->p1 = f.p + alpha_pwr; //p1 será alpha_pwr dBs más que el nivel de potencia que tenemos. (mejor 7.8)
       //vad_data->am1 = f.am; //*** NO SE SI ES ÚTIL, CREO QUE EL VALOR ES CERCANO A CERO. PARECE QUE NO HAGA NADA PERO ALGO MEJORA***
-      vad_data->zcr1 = f.zcr + 2; //El nivel que se tomará como referencia es el del principio (silencio)
+      vad_data->zcr1 = f.zcr + alpha_zcr; //El nivel que se tomará como referencia es de alpha_zcr superior al inicial. (mejor 2)
     break;
 
     case ST_SILENCE:
