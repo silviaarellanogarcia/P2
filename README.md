@@ -111,11 +111,16 @@ Ejercicios
 
 	* Incremento del nivel potencia en dB, respecto al nivel correspondiente al silencio inicial, para
 	  estar seguros de que un segmento de señal se corresponde con voz.
-En el caso de la potencia se diferencian bastante bien a lo largo de toda la señal los tramos de silencio y de voz. Utilizando el audio pav_2151.wav, podríamos utilizar 30dBs como umbral, ya que a lo largo de la señal los tramos de silencio no superan este valor.
+	  
+	En el caso de la potencia se diferencian bastante bien a lo largo de toda la señal los tramos de silencio y de voz. Utilizando el audio pav_2151.wav, podríamos utilizar 30dBs como umbral, ya que a lo largo de la señal los tramos de silencio no superan este valor.
+
 	* Duración mínima razonable de los segmentos de voz y silencio.
-En el segmento grabado se han exagerado excesivamente las pausas entre frases, por lo que decidimos comparar los resultados obtenidos con otros audios de la base de datos, llegando a la conclusión de que los tramos de silencio no suelen durar menos de 0,3s (En nuestra señal, todos los silencios son superiores a 0,5s).
+	
+	En el segmento grabado se han exagerado excesivamente las pausas entre frases, por lo que decidimos comparar los resultados obtenidos con otros audios de la base de datos, llegando a la conclusión de que los tramos de silencio no suelen durar menos de 0,3s (En nuestra señal, todos los silencios son superiores a 0,5s).
+
 	* ¿Es capaz de sacar alguna conclusión a partir de la evolución de la tasa de cruces por cero?
-No podemos llegar a ninguna conclusión a partir de la evolución de la tasa de cruces por cero, aunque puede ser útil para acabar de tomar una decisión. En los tramos sordos la zcr suele oscilar alrededor del 2. Cabe destacar que justo al empezar un tramo de voz (y en algunos casos al empezar a pronunciar una palabra), la zcr crece notablemente, pudiéndonos llevar a confusión. //CONFIRMAR!!!!!
+	
+	No podemos llegar a ninguna conclusión a partir de la evolución de la tasa de cruces por cero, aunque puede ser útil para acabar de tomar una decisión. En los tramos sordos la zcr suele oscilar alrededor del 2. Cabe destacar que justo al empezar un tramo de voz (y en algunos casos al empezar a pronunciar una palabra), la zcr crece notablemente, pudiéndonos llevar a confusión. //CONFIRMAR!!!!!
 
 ### Desarrollo del detector de actividad vocal
 
