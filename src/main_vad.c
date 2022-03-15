@@ -17,15 +17,14 @@ int main(int argc, char *argv[]) {
   int n_read = 0, i;
 
   VAD_DATA *vad_data;
-  VAD_STATE state, last_state;
+  VAD_STATE state, last_state, last_defined_state = ST_SILENCE;
 
   float *buffer, *buffer_zeros;
   int frame_size;         /* in samples */
   float frame_duration;   /* in seconds */
-  unsigned int t, last_t; /* in frames */
+  unsigned int t, last_t, last_defined_t = 0; /* in frames */
 
   char	*input_wav, *output_vad, *output_wav;
-  float alpha_pwr, alpha_zcr;
 
   DocoptArgs args = docopt(argc, argv, /* help */ 1, /* version */ "2.0");
 
@@ -33,8 +32,6 @@ int main(int argc, char *argv[]) {
   input_wav  = args.input_wav;
   output_vad = args.output_vad;
   output_wav = args.output_wav;
-  alpha_pwr = args.alpha_pwr;
-  alpha_zcr = args.alpha_zcr;
 
   if (input_wav == 0 || output_vad == 0) {
     fprintf(stderr, "%s\n", args.usage_pattern);
@@ -66,7 +63,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  vad_data = vad_open(sf_info.samplerate);
+  vad_data = vad_open(sf_info.samplerate, args.alpha0, args.alpha1);
   /* Allocate memory for buffers */
   frame_size   = vad_frame_size(vad_data);
   buffer       = (float *) malloc(frame_size * sizeof(float));
@@ -84,21 +81,55 @@ int main(int argc, char *argv[]) {
       /* TODO: copy all the samples into sndfile_out */
     }
 
-    state = vad(vad_data, buffer, alpha_pwr, alpha_zcr);
+    state = vad(vad_data, buffer);
     if (verbose & DEBUG_VAD) vad_show_state(vad_data, stdout);
+
+    if (state == ST_MB_SILENCE)
+      state = ST_VOICE;
+    else if (state == ST_MB_VOICE)
+      state = ST_SILENCE;
+    
+    /*
+    FORMA 2
+    if (state != last_state) {
+      if (last_defined_t != last_t) {
+        if ((last_defined_state == ST_VOICE && state == ST_SILENCE) ||
+              (last_defined_state == ST_SILENCE && state == ST_VOICE)) {
+          fprintf(vadfile, "%.5f\t%.5f\t%s\n", last_defined_t * frame_duration, last_t * frame_duration, state2str(last_defined_state));
+          last_defined_state = state;
+          last_defined_t = last_t;
+          last_t = t;
+        }
+      }
+      last_state = state;
+    }
+    if (state == last_defined_state)
+      last_t = t;
+    */
+
+   /*
+    FORMA INICIAL
+   if (state != last_state) {
+      if (t != last_t) {
+        fprintf(vadfile, "%.5f\t%.5f\t%s\n", last_t * frame_duration, t * frame_duration, state2str(last_state));
+      } 
+      last_state = state;
+      last_t = t;       
+    }*/
 
     /* TODO: print only SILENCE and VOICE labels */
     /* As it is, it prints UNDEF segments but is should be merge to the proper value */
+
+
+    // FORMA 3
     if (state != last_state) {
       if (t != last_t) {
-        if (t > last_t + 9 || last_state == ST_UNDEF) {
+        if (t > last_t + 8) {
           fprintf(vadfile, "%.5f\t%.5f\t%s\n", last_t * frame_duration, t * frame_duration, state2str(last_state));
           last_t = t;
-          //last_state = state;
-        }  
+        } 
       }
       last_state = state;
-      //last_t = t;
     }
 
     if (sndfile_out != 0) {

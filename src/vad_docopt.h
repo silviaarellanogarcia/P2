@@ -19,8 +19,8 @@ typedef struct {
     char *input_wav;
     char *output_vad;
     char *output_wav;
-    float alpha_pwr;
-    float alpha_zcr;
+    float alpha0;
+    float alpha1;
     /* special */
     const char *usage_pattern;
     const char *help_message;
@@ -41,8 +41,8 @@ const char help_message[] =
 "   -v, --verbose  Show debug information\n"
 "   -h, --help     Show this screen\n"
 "   --version      Show the version of the project\n"
-"   -p VALUE, --alpha-pwr=VALUE   Alpha value configuration for power threshold\n"
-"   -z VALUE, --alpha-zcr=VALUE   Alpha value configuration for zcr threshold\n"
+"   -0 VALUE, --alpha0=VALUE   Power lower threshold\n"
+"   -1 VALUE, --alpha1=VALUE   Power higher threshold\n"
 "";
 
 const char usage_pattern[] =
@@ -283,12 +283,12 @@ int elems_to_args(Elements *elements, DocoptArgs *args, bool help,
         } else if (!strcmp(option->olong, "--output-wav")) {
             if (option->argument)
                 args->output_wav = option->argument;
-        } else if (!strcmp(option->olong, "--alpha-pwr")) {
+        } else if (!strcmp(option->olong, "--alpha0")) {
             if (option->argument)
-                args->alpha_pwr = atof(option->argument);
-        } else if (!strcmp(option->olong, "--alpha-zcr")) {
+                args->alpha0 = atof(option->argument);
+        } else if (!strcmp(option->olong, "--alpha1")) {
             if (option->argument)
-                args->alpha_zcr = atof(option->argument);
+                args->alpha1 = atof(option->argument);
         }
     }
     /* commands */
@@ -309,7 +309,7 @@ int elems_to_args(Elements *elements, DocoptArgs *args, bool help,
 
 DocoptArgs docopt(int argc, char *argv[], bool help, const char *version) {
     DocoptArgs args = {
-        0, 0, 0, NULL, NULL, NULL, 7.8, 2.0,
+        0, 0, 0, NULL, NULL, NULL, 1.5, 7.0,
         usage_pattern, help_message
     };
     Tokens ts;
@@ -324,8 +324,8 @@ DocoptArgs docopt(int argc, char *argv[], bool help, const char *version) {
         {"-i", "--input-wav", 1, 0, NULL},
         {"-o", "--output-vad", 1, 0, NULL},
         {"-w", "--output-wav", 1, 0, NULL},
-        {"-p", "--alpha-pwr", 1, 0, NULL},
-        {"-z", "--alpha-zcr", 1, 0, NULL},
+        {"-0", "--alpha0", 1, 0, NULL},
+        {"-1", "--alpha1", 1, 0, NULL},
     };
     Elements elements = {0, 0, 8, commands, arguments, options};
 

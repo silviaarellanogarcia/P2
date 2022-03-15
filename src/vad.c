@@ -14,7 +14,7 @@ const float FRAME_TIME = 10.0F; /* in ms. */
  */
 
 const char *state_str[] = {
-  "UNDEF", "S", "V", "INIT" //, "MBV", "MBS"
+  "UNDEF", "S", "V", "INIT", "MBV", "MBS"
 };
 
 const char *state2str(VAD_STATE st) {
@@ -25,8 +25,6 @@ const char *state2str(VAD_STATE st) {
 typedef struct {
   float zcr;
   float p;
-  //float am;
-  float time; //Cuanto dura la trama estudiada
 } Features;
 
 /* 
@@ -45,9 +43,7 @@ Features compute_features(const float *x, int N) {
    */
   Features feat;
   feat.zcr = compute_zcr(x,N,16000);
-  //feat.am = compute_am(x,N);
   feat.p = compute_power(x,N);
-  feat.time = 0;//compute_time();
   return feat;
 }
 
@@ -55,11 +51,16 @@ Features compute_features(const float *x, int N) {
  * TODO: Init the values of vad_data
  */
 
-VAD_DATA * vad_open(float rate) {
+VAD_DATA * vad_open(float rate, float alpha0, float alpha1) {
   VAD_DATA *vad_data = malloc(sizeof(VAD_DATA));
   vad_data->state = ST_INIT;
   vad_data->sampling_rate = rate;
   vad_data->frame_length = rate * FRAME_TIME * 1e-3;
+  vad_data->alpha0 = alpha0;
+  vad_data->alpha1 = alpha1;
+  vad_data->num_total_frame = 8;
+  vad_data->num_frame = 0;
+  vad_data->pot = 0.0;
   return vad_data;
 }
 
@@ -82,7 +83,7 @@ unsigned int vad_frame_size(VAD_DATA *vad_data) {
  * using a Finite State Automata
  */
 
-VAD_STATE vad(VAD_DATA *vad_data, float *x, float alpha_pwr, float alpha_zcr) {
+VAD_STATE vad(VAD_DATA *vad_data, float *x) {
   /* Se llama solo una vez por trama a esta función
   x es la señal.
   f.p = feature de potencia
@@ -100,43 +101,59 @@ VAD_STATE vad(VAD_DATA *vad_data, float *x, float alpha_pwr, float alpha_zcr) {
 
   switch (vad_data->state) { //*** Autómata ***
     case ST_INIT:
-      vad_data->state = ST_SILENCE;
-      vad_data->p1 = f.p + alpha_pwr; //p1 será alpha_pwr dBs más que el nivel de potencia que tenemos. (mejor 7.8)
-      //vad_data->am1 = f.am; //*** NO SE SI ES ÚTIL, CREO QUE EL VALOR ES CERCANO A CERO. PARECE QUE NO HAGA NADA PERO ALGO MEJORA***
-      vad_data->zcr1 = f.zcr + alpha_zcr; //El nivel que se tomará como referencia es de alpha_zcr superior al inicial. (mejor 2)
-    break;
+      //fprintf(stdout, "%d %d\n", vad_data->num_frame, vad_data->num_total_frame);
+      if (vad_data->num_frame < vad_data->num_total_frame) {
+        vad_data->pot += pow(10, f.p/10);
+        vad_data->num_frame++;
+      } else {
+        vad_data->state = ST_SILENCE;
+        vad_data->pot = 10*log10(vad_data->pot/vad_data->num_total_frame);
+        vad_data->p1 = vad_data->pot + vad_data->alpha1; //p1 será alpha1 dBs más que el nivel de potencia que tenemos
+        vad_data->p0 = vad_data->pot + vad_data->alpha0; 
+        //vad_data->zcr1 = f.zcr + vad_data->alpha0;
+      }
+      break;
 
     case ST_SILENCE:
       if (f.p > vad_data->p1)
         vad_data->state = ST_VOICE;
+      else if (f.p > vad_data->p0)
+        vad_data->state = ST_MB_VOICE;
       break;
 
     case ST_VOICE:
-      if (f.p < vad_data->p1 && f.zcr < vad_data->zcr1)
+      if (f.p < vad_data->p0) //&& f.zcr < vad_data->zcr1)
+        vad_data->state = ST_SILENCE;
+      else if (f.p < vad_data->p1)
+        vad_data->state = ST_MB_SILENCE;
+      break;
+
+    case ST_MB_SILENCE:
+      if (f.p > vad_data->p1)
+        vad_data->state = ST_VOICE;
+      else if (f.p < vad_data->p0)
         vad_data->state = ST_SILENCE;
       break;
 
-  /*
-    case ST_MB_SILENCE:
-      if(f.zcr > vad_data->zcr1)
-        -----
-      break;
-
     case ST_MB_VOICE:
-      if()
-        -----
+      if (f.p > vad_data->p1)
+        vad_data->state = ST_VOICE;
+      else if (f.p < vad_data->p0)
+        vad_data->state = ST_SILENCE;
       break;
-  */
 
     case ST_UNDEF:
       break;
   }
 
   if (vad_data->state == ST_SILENCE ||
-      vad_data->state == ST_VOICE)
+      vad_data->state == ST_VOICE ||
+      vad_data->state == ST_MB_SILENCE ||
+      vad_data->state == ST_MB_VOICE)
     return vad_data->state;
-  else
-    return ST_UNDEF;
+  if (vad_data->state == ST_INIT)
+    return ST_SILENCE;
+  return ST_UNDEF;
 }
 
 void vad_show_state(const VAD_DATA *vad_data, FILE *out) {
