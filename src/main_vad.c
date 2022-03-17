@@ -17,12 +17,12 @@ int main(int argc, char *argv[]) {
   int n_read = 0, i;
 
   VAD_DATA *vad_data;
-  VAD_STATE state, last_state, last_defined_state = ST_SILENCE;
+  VAD_STATE state, last_state;
 
   float *buffer, *buffer_zeros;
   int frame_size;         /* in samples */
   float frame_duration;   /* in seconds */
-  unsigned int t, last_t, last_defined_t = 0; /* in frames */
+  unsigned int t, last_t; /* in frames */
 
   char	*input_wav, *output_vad, *output_wav;
 
@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
     state = vad(vad_data, buffer);
     if (verbose & DEBUG_VAD) vad_show_state(vad_data, stdout);
 
-    if (state == ST_MB_SILENCE)
+    if (state == ST_MB_SILENCE) //Comentario añadido en la parte final de la memoria
       state = ST_VOICE;
     else if (state == ST_MB_VOICE)
       state = ST_SILENCE;
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
       last_t = t;
     */
 
-   /*
+    /*
     FORMA INICIAL
     if (state != last_state) {
       if (t != last_t) {
@@ -134,7 +134,6 @@ int main(int argc, char *argv[]) {
     }
 
     if (sndfile_out != 0 && state == ST_SILENCE) {
-      /* TODO: go back and write zeros in silence segments */
       sf_seek(sndfile_out, -frame_size, SEEK_CUR);
       sf_write_float(sndfile_out, buffer_zeros, frame_size);
     }
@@ -143,7 +142,7 @@ int main(int argc, char *argv[]) {
   state = vad_close(vad_data);
   /* TODO: what do you want to print, for last frames? */
   if (t != last_t)
-    fprintf(vadfile, "%.5f\t%.5f\t%s\n", last_t * frame_duration, t * frame_duration + n_read / (float) sf_info.samplerate, "S");//state2str(state));
+    fprintf(vadfile, "%.5f\t%.5f\t%s\n", last_t * frame_duration, t * frame_duration + n_read / (float) sf_info.samplerate, "S");
 
   /* clean up: free memory, close open files */
   free(buffer);

@@ -36,22 +36,20 @@ Features compute_features(const float *x, int N) {
    * Input: x[i] : i=0 .... N-1 
    * Ouput: computed features
    */
-  /* 
-   * DELETE and include a call to your own functions
-   *
-   * For the moment, compute random value between 0 and 1 
-   */
   Features feat;
   feat.zcr = compute_zcr(x,N,16000);
   feat.p = compute_power(x,N);
   return feat;
 }
 
-/* 
- * TODO: Init the values of vad_data
- */
+//Init the values of vad_data
 
 VAD_DATA * vad_open(float rate, float alpha0, float alpha1, int frames) {
+  /****AMPLIACIÓN****: 
+    Hemos incluido la posibilidad de entrar por parámetros el número de tramas que se quieren 
+    coger al principio para calcular la media del nuvel de ruido de la señal. Creemos que es 
+    bueno poder elegirlo, ya que en algunos casos puede ser determinante para obtener mejores resultados.
+  */
   VAD_DATA *vad_data = malloc(sizeof(VAD_DATA));
   vad_data->state = ST_INIT;
   vad_data->sampling_rate = rate;
