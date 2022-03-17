@@ -51,16 +51,17 @@ Features compute_features(const float *x, int N) {
  * TODO: Init the values of vad_data
  */
 
-VAD_DATA * vad_open(float rate, float alpha0, float alpha1) {
+VAD_DATA * vad_open(float rate, float alpha0, float alpha1, int frames) {
   VAD_DATA *vad_data = malloc(sizeof(VAD_DATA));
   vad_data->state = ST_INIT;
   vad_data->sampling_rate = rate;
   vad_data->frame_length = rate * FRAME_TIME * 1e-3;
   vad_data->alpha0 = alpha0;
   vad_data->alpha1 = alpha1;
-  vad_data->num_total_frame = 8;
+  vad_data->num_total_frame = frames;
   vad_data->num_frame = 0;
   vad_data->pot = 0.0;
+  vad_data->zcr1 = 0.0;
   return vad_data;
 }
 
@@ -101,16 +102,16 @@ VAD_STATE vad(VAD_DATA *vad_data, float *x) {
 
   switch (vad_data->state) { //*** Autómata ***
     case ST_INIT:
-      //fprintf(stdout, "%d %d\n", vad_data->num_frame, vad_data->num_total_frame);
       if (vad_data->num_frame < vad_data->num_total_frame) {
         vad_data->pot += pow(10, f.p/10);
         vad_data->num_frame++;
+        vad_data->zcr1 += f.zcr;
       } else {
         vad_data->state = ST_SILENCE;
         vad_data->pot = 10*log10(vad_data->pot/vad_data->num_total_frame);
         vad_data->p1 = vad_data->pot + vad_data->alpha1; //p1 será alpha1 dBs más que el nivel de potencia que tenemos
         vad_data->p0 = vad_data->pot + vad_data->alpha0; 
-        //vad_data->zcr1 = f.zcr + vad_data->alpha0;
+        vad_data->zcr1 = vad_data->zcr1/vad_data->num_total_frame;
       }
       break;
 
@@ -122,7 +123,7 @@ VAD_STATE vad(VAD_DATA *vad_data, float *x) {
       break;
 
     case ST_VOICE:
-      if (f.p < vad_data->p0) //&& f.zcr < vad_data->zcr1)
+      if (f.p < vad_data->p0 && f.zcr < vad_data->zcr1)
         vad_data->state = ST_SILENCE;
       else if (f.p < vad_data->p1)
         vad_data->state = ST_MB_SILENCE;

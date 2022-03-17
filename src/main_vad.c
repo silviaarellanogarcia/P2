@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  vad_data = vad_open(sf_info.samplerate, args.alpha0, args.alpha1);
+  vad_data = vad_open(sf_info.samplerate, args.alpha0, args.alpha1, args.frames);
   /* Allocate memory for buffers */
   frame_size   = vad_frame_size(vad_data);
   buffer       = (float *) malloc(frame_size * sizeof(float));
@@ -79,6 +79,7 @@ int main(int argc, char *argv[]) {
 
     if (sndfile_out != 0) {
       /* TODO: copy all the samples into sndfile_out */
+      sf_write_float(sndfile_out, buffer, frame_size);
     }
 
     state = vad(vad_data, buffer);
@@ -109,7 +110,7 @@ int main(int argc, char *argv[]) {
 
    /*
     FORMA INICIAL
-   if (state != last_state) {
+    if (state != last_state) {
       if (t != last_t) {
         fprintf(vadfile, "%.5f\t%.5f\t%s\n", last_t * frame_duration, t * frame_duration, state2str(last_state));
       } 
@@ -127,13 +128,15 @@ int main(int argc, char *argv[]) {
         if (t > last_t + 8) {
           fprintf(vadfile, "%.5f\t%.5f\t%s\n", last_t * frame_duration, t * frame_duration, state2str(last_state));
           last_t = t;
-        } 
+        }
       }
       last_state = state;
     }
 
-    if (sndfile_out != 0) {
+    if (sndfile_out != 0 && state == ST_SILENCE) {
       /* TODO: go back and write zeros in silence segments */
+      sf_seek(sndfile_out, -frame_size, SEEK_CUR);
+      sf_write_float(sndfile_out, buffer_zeros, frame_size);
     }
   }
 
