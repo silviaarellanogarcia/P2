@@ -175,6 +175,14 @@ Recall S:228.07/271.01 84.15%   Precision S:228.07/240.25 94.93%   F-score S (1/
   la que se vea con claridad la señal antes y después de la cancelación (puede que `wavesurfer` no sea la
   mejor opción para esto, ya que no es capaz de visualizar varias señales al mismo tiempo).
 
+	A continuación podemos observar la señal original:
+	<img src="img/original_audio.png" align="center">
+
+	A continuación podemos observar la señal modificada añadiendo ceros en las tramas detectadas como silencios:
+	<img src="img/output_audio.png" align="center">
+
+	Visualmente, podemos concluir que el autómata funciona correctamente, ya que en la mayoría de tramos de la señal original donde realmente había silencios se han modificado y ahora toman el valor de cero.
+
 #### Gestión de las opciones del programa usando `docopt_c`
 
 - Si ha usado `docopt_c` para realizar la gestión de las opciones y argumentos del programa `vad`, inserte
