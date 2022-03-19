@@ -148,7 +148,7 @@ Recall S:228.07/271.01 84.15%   Precision S:228.07/240.25 94.93%   F-score S (1/
 
 	<img src="img/desarrollo_pto2.png" align="center">
 
-- Explique, si existen. las discrepancias entre el etiquetado manual y la detección automática.
+- Explique, si existen, las discrepancias entre el etiquetado manual y la detección automática.
 
 	Aunque en general son bastante parecidos, al principio del audio hay un pequeño instante en el que en medio de un silencio laargo  detetcta voz. Hay pequeños errores de precisión (tanto a la hora de etiquetar manualmente como al detectarlo), a penas apreciables (0,05s), justo en los cambios entre voz y silencio.
 
