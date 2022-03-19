@@ -183,6 +183,29 @@ Recall S:228.07/271.01 84.15%   Precision S:228.07/240.25 94.93%   F-score S (1/
 
 	Visualmente, podemos concluir que el autómata funciona correctamente, ya que en la mayoría de tramos de la señal original donde realmente había silencios se han modificado y ahora toman el valor de cero.
 
+	Si utilizamos la señal generada con las tramas de silencio a cero y volvemos a ejecutar el programa para generar un nuevo .vad, comparando este nuevo fichero .vad con el .lab de la señal original obtenemos un mejor resultado.
+
+	Generación de la señal de salida *pav_2151.wav*:
+
+	```bash
+	$ bin/vad -i pav_2151.wav -o pav_2151.vad -w pav_2151_out.wav
+	$ scripts/vad_evaluation.pl pav_2151.lab
+	**************** pav_2151.lab ****************
+	Recall V: 14.31/14.48  98.80%   Precision V: 14.31/14.51  98.60%   F-score V (2)  : 98.76%
+	Recall S:  9.47/9.67   97.90%   Precision S:  9.47/9.64   98.20%   F-score S (1/2): 98.14%
+	===> pav_2151.lab: 98.451%
+	```
+
+	Obtención de resultados con la señal de entrada *pav_2151.wav*:
+	```bash
+	$ bin/vad -i pav_2151_out.wav -o pav_2151.vad
+	$ scripts/vad_evaluation.pl pav_2151.lab
+	**************** pav_2151.lab ****************
+	Recall V: 14.35/14.48  99.08%   Precision V: 14.35/14.58  98.40%   F-score V (2)  : 98.94%
+	Recall S:  9.44/9.67   97.59%   Precision S:  9.44/9.57   98.61%   F-score S (1/2): 98.40%
+	===> pav_2151.lab: 98.671%
+	```
+
 #### Gestión de las opciones del programa usando `docopt_c`
 
 - Si ha usado `docopt_c` para realizar la gestión de las opciones y argumentos del programa `vad`, inserte
